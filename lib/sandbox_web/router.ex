@@ -3,6 +3,7 @@ defmodule SandboxWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json"])
+    plug(Sandbox.Plug.Authentication)
   end
 
   scope "/", SandboxWeb do
