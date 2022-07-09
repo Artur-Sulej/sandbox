@@ -3,17 +3,19 @@ defmodule Sandbox.Accounts do
   The Accounts context.
   """
 
+  alias Sandbox.AccountBuilder
+
   @doc """
-  Returns the list of accounts.
+  Returns a list of accounts.
   """
-  def list_accounts do
-    []
+  def list_accounts(token) do
+    AccountBuilder.list_accounts(token)
   end
 
   @doc """
-  Gets a single account.
+  Returns a single account for a given id.
   """
-  def get_account(_id) do
-    nil
+  def get_account(token, id) do
+    AccountBuilder.get_account(token, id)
   end
 end

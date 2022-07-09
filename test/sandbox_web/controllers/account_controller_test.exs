@@ -2,20 +2,24 @@ defmodule SandboxWeb.AccountControllerTest do
   use SandboxWeb.ConnCase
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    conn = put_req_header(conn, "authorization", "Basic dGVzdF93YXp6dXA6")
+    {:ok, conn: conn}
   end
 
   describe "index" do
     test "lists all accounts", %{conn: conn} do
       conn = get(conn, Routes.account_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+
+      assert [
+               %{"id" => "acc_eeebcfe364f30c8772d59"}
+             ] = json_response(conn, 200)
     end
   end
 
   describe "show" do
     test "fetch the account", %{conn: conn} do
-      conn = get(conn, Routes.account_path(conn, :show, 123))
-      assert json_response(conn, 200)["data"] == nil
+      conn = get(conn, Routes.account_path(conn, :show, "acc_eeebcfe364f30c8772d59"))
+      assert %{"id" => "acc_eeebcfe364f30c8772d59"} = json_response(conn, 200)
     end
   end
 end
