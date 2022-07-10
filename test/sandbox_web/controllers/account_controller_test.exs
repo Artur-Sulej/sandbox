@@ -11,15 +11,15 @@ defmodule SandboxWeb.AccountControllerTest do
       conn = get(conn, Routes.account_path(conn, :index))
 
       assert [
-               %{"id" => "acc_eeebcfe364f30c8772d59"}
+               %{"id" => "acc_4d5d38b527402c061bc0d"}
              ] = json_response(conn, 200)
     end
   end
 
   describe "show" do
     test "fetch the account", %{conn: conn} do
-      conn = get(conn, Routes.account_path(conn, :show, "acc_eeebcfe364f30c8772d59"))
-      assert %{"id" => "acc_eeebcfe364f30c8772d59"} = json_response(conn, 200)
+      conn = get(conn, Routes.account_path(conn, :show, "acc_4d5d38b527402c061bc0d"))
+      assert %{"id" => "acc_4d5d38b527402c061bc0d"} = json_response(conn, 200)
     end
   end
 end

@@ -1,28 +1,20 @@
-defmodule Sandbox.AccountBuilder do
+defmodule Sandbox.Accounts.AccountBuilder do
+  @max_count 4
+
+  alias Sandbox.Utils.IdGenerator
+
   def list_accounts(token) do
-    accounts_count =
-      token
-      |> :crypto.bytes_to_integer()
-      |> rem(4)
-      |> Kernel.+(1)
-
-    1..accounts_count
-    |> Enum.map(fn index ->
-      id =
-        :crypto.hash(:md5, "#{token}#{index}")
-        |> Base.encode16()
-        |> String.slice(0..20)
-        |> String.downcase()
-
-      "acc_#{id}"
-    end)
+    token
+    |> get_accounts_count()
+    |> (&(1..&1)).()
+    |> Enum.map(&IdGenerator.generate_id(token, "acc", &1))
     |> Enum.map(&build_account/1)
   end
 
-  def get_account(token, id) do
+  def get_account(token, account_id) do
     token
     |> list_accounts()
-    |> Enum.find(fn account -> account.id == id end)
+    |> Enum.find(fn %{id: id} -> id == account_id end)
   end
 
   defp build_account(id) do
@@ -59,6 +51,13 @@ defmodule Sandbox.AccountBuilder do
       id: institution_id,
       name: institution_name
     }
+  end
+
+  defp get_accounts_count(token) do
+    token
+    |> :crypto.bytes_to_integer()
+    |> rem(@max_count)
+    |> Kernel.+(1)
   end
 
   defp seed_random(seed) do
