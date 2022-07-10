@@ -8,7 +8,10 @@ defmodule SandboxWeb.Router do
 
   scope "/", SandboxWeb do
     pipe_through(:api)
-    resources("/accounts", AccountController, only: [:index, :show])
+
+    resources("/accounts", AccountController, only: [:index, :show]) do
+      resources("/transactions", TransactionController, only: [:index, :show])
+    end
   end
 
   # Enables LiveDashboard only for development
