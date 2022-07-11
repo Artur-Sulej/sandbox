@@ -1,13 +1,13 @@
 defmodule Sandbox.Accounts.AccountBuilder do
   @max_count 4
 
-  alias Sandbox.Utils.IdGenerator
+  alias Sandbox.Utils.Generator
 
   def list_accounts(token) do
     token
     |> get_accounts_count()
     |> (&(1..&1)).()
-    |> Enum.map(&IdGenerator.generate_id(token, "acc", &1))
+    |> Enum.map(&Generator.generate_id("acc_#{token}_#{&1}", "acc"))
     |> Enum.map(&build_account/1)
   end
 
