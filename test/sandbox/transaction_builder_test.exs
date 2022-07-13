@@ -3,31 +3,51 @@ defmodule Sandbox.TransactionBuilderTest do
 
   alias Sandbox.Accounts.TransactionBuilder
 
-  describe "transactions" do
-    test "list_transactions/2 returns all transactions for given account" do
-      token = "test_uno"
-      account_id = "acc_79725939aa3d0c2b18a15"
-      transactions = TransactionBuilder.list_transactions(token, account_id)
-      transactions2 = TransactionBuilder.list_transactions(token, "other_account")
+  @token1 "test_one"
+  @token2 "test_two"
+  @account_id1 "acc_2776d00ed47e1bdd82f24"
+  @account_id2 "acc_1a12637aded5310a22365"
 
-      assert Enum.any?(transactions)
+  describe "list_transactions/2" do
+    test "returns all transactions for given account" do
+      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1)
+      transactions2 = TransactionBuilder.list_transactions(@token2, @account_id1)
+
+      assert Enum.any?(transactions1)
       assert Enum.empty?(transactions2)
 
-      Enum.each(transactions, fn trx ->
-        assert trx.account_id == account_id
+      Enum.each(transactions1, fn trx ->
+        assert %{
+                 account_id: @account_id1,
+                 amount: "-84.88",
+                 date: "2022-07-10",
+                 description: "Electronic Withdrawal",
+                 details: %{
+                   category: "service",
+                   counterparty: %{name: "BANK OF THE WEST", type: "organization"},
+                   processing_status: "complete"
+                 },
+                 id: _,
+                 links: %{
+                   account: _,
+                   self: _
+                 },
+                 running_balance: nil,
+                 status: "pending",
+                 type: "card_payment"
+               } = trx
       end)
     end
 
-    test "list_transactions/2 returns transactions for last 90 days" do
-      token = "test_uno"
-      account_id = "acc_79725939aa3d0c2b18a15"
-      transactions = TransactionBuilder.list_transactions(token, account_id)
-
-      end_date = Date.utc_today()
-      start_date = Date.add(end_date, -89)
+    test "returns transactions for last 90 days" do
+      transactions = TransactionBuilder.list_transactions(@token1, @account_id1)
       sorted_trx = Enum.sort_by(transactions, & &1.date, &>=/2)
       first_trx = List.first(sorted_trx)
       last_trx = List.last(sorted_trx)
+
+      end_date = Date.utc_today()
+      start_date = Date.add(end_date, -89)
+
       end_date_comparison = Date.compare(end_date, Date.from_iso8601!(first_trx.date))
       start_date_comparison = Date.compare(start_date, Date.from_iso8601!(last_trx.date))
 
@@ -35,60 +55,41 @@ defmodule Sandbox.TransactionBuilderTest do
       assert :lt == start_date_comparison || :eq == start_date_comparison
     end
 
-    test "list_transactions/2 returns different results for accounts" do
-      token = "test_uno"
-      account_id = "acc_79725939aa3d0c2b18a15"
-      transactions = TransactionBuilder.list_transactions(token, account_id)
+    test "returns constant transactions and different for two accounts" do
+      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1)
+      transactions2 = TransactionBuilder.list_transactions(@token2, @account_id2)
 
-      token2 = "test_duo"
-      account_id2 = "acc_72607085fef10d84883e9"
-      transactions2 = TransactionBuilder.list_transactions(token2, account_id2)
-
-      assert Enum.count(transactions2) != Enum.count(transactions)
+      assert transactions2 != transactions1
     end
+  end
 
-    test "get_transaction/3 returns transaction only for correct token and ids" do
-      token = "test_uno"
-      account_id = "acc_79725939aa3d0c2b18a15"
-      trx_id = "trx_1401dfc7893e4f5961b75"
+  describe "get_transaction/3" do
+    test "returns transaction only for correct token and ids" do
+      trx_id = "trx_2f76a945be343d16960e4"
 
-      assert TransactionBuilder.get_transaction(token, account_id, trx_id) ==
-               build_transaction(trx_id, account_id)
+      assert TransactionBuilder.get_transaction(@token1, @account_id1, trx_id) ==
+               build_transaction(trx_id, @account_id1)
 
-      refute TransactionBuilder.get_transaction(
-               "other_token",
-               account_id,
-               "txn_o3q8oei9er0iq9k7qe000"
-             )
-
-      refute TransactionBuilder.get_transaction(
-               token,
-               "other_account",
-               "txn_o3q8oei9er0iq9k7qe000"
-             )
-
-      refute TransactionBuilder.get_transaction(token, account_id, "other_trx")
+      refute TransactionBuilder.get_transaction("other_token", @account_id1, trx_id)
+      refute TransactionBuilder.get_transaction(@token1, "other_account", trx_id)
+      refute TransactionBuilder.get_transaction(@token1, @account_id1, "other_trx")
     end
 
     test "listed transaction accessible via get_transaction/3" do
-      token1 = "test_uno"
-      token2 = "test_duo"
-      account_id1 = "acc_79725939aa3d0c2b18a15"
-      account_id2 = "acc_72607085fef10d84883e9"
-      transactions1 = TransactionBuilder.list_transactions(token1, account_id1)
-      transactions2 = TransactionBuilder.list_transactions(token2, account_id2)
+      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1)
+      transactions2 = TransactionBuilder.list_transactions(@token2, @account_id2)
 
       assert Enum.any?(transactions1)
       assert Enum.any?(transactions2)
 
       Enum.each(transactions1, fn transaction ->
-        assert TransactionBuilder.get_transaction(token1, account_id1, transaction.id)
-        refute TransactionBuilder.get_transaction(token2, account_id2, transaction.id)
+        assert TransactionBuilder.get_transaction(@token1, @account_id1, transaction.id)
+        refute TransactionBuilder.get_transaction(@token2, @account_id2, transaction.id)
       end)
 
       Enum.each(transactions2, fn transaction ->
-        refute TransactionBuilder.get_transaction(token1, account_id1, transaction.id)
-        assert TransactionBuilder.get_transaction(token2, account_id2, transaction.id)
+        refute TransactionBuilder.get_transaction(@token1, @account_id1, transaction.id)
+        assert TransactionBuilder.get_transaction(@token2, @account_id2, transaction.id)
       end)
     end
 

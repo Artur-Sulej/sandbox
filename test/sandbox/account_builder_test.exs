@@ -3,83 +3,92 @@ defmodule Sandbox.AccountBuilderTest do
 
   alias Sandbox.Accounts.AccountBuilder
 
-  describe "accounts" do
-    test "list_accounts/1 returns all accounts" do
-      expected_account1 =
-        build_account(%{
-          id: "acc_a4140199141fc96b362f0",
-          institution: %{id: "bank_of_america", name: "Bank of America"}
-        })
+  @token1 "test_one"
+  @token2 "test_two"
+  @account1 %{token: @token1, account_id: "acc_2776d00ed47e1bdd82f24"}
 
-      expected_account2 =
-        build_account(%{
-          id: "acc_97b9197aca031090df84f",
-          institution: %{id: "wells_fargo", name: "Wells Fargo"}
-        })
+  describe "list_accounts/1" do
+    test "returns all accounts for given token" do
+      accounts = AccountBuilder.list_accounts(@token1)
+      assert Enum.any?(accounts)
 
-      assert [expected_account1, expected_account2] == AccountBuilder.list_accounts("token1")
+      Enum.each(accounts, fn account ->
+        assert %{
+                 currency: "USD",
+                 enrollment_id: "enr_o3oveb8h0pukpk616a000",
+                 id: "acc_" <> _,
+                 institution: %{id: _, name: _},
+                 last_four: "5765",
+                 links: %{
+                   balances: _,
+                   self: _,
+                   transactions: _
+                 },
+                 name: "Platinum Card",
+                 status: "open",
+                 subtype: "credit_card",
+                 type: "credit"
+               } = account
+      end)
     end
 
-    test "list_accounts/1 returns differnt number of accounts" do
-      accounts1 = AccountBuilder.list_accounts("token_one")
-      accounts2 = AccountBuilder.list_accounts("token_two")
+    test "returns constant accounts and different for two tokens" do
+      accounts1 = AccountBuilder.list_accounts(@token1)
+      assert Enum.any?(accounts1)
+      assert accounts1 == AccountBuilder.list_accounts(@token1)
 
-      assert 2 = Enum.count(accounts1)
-      assert 4 = Enum.count(accounts2)
+      accounts2 = AccountBuilder.list_accounts(@token2)
+      assert Enum.any?(accounts2)
+      assert accounts2 == AccountBuilder.list_accounts(@token2)
+
+      assert accounts1 != accounts2
     end
 
-    test "get_account/2 returns account for given id and token" do
-      account = AccountBuilder.get_account("token1", "acc_a4140199141fc96b362f0")
+    test "returns differnt number of accounts" do
+      assert 2 == @token1 |> AccountBuilder.list_accounts() |> Enum.count()
+      assert 4 == @token2 |> AccountBuilder.list_accounts() |> Enum.count()
+    end
+  end
 
-      expected_account =
-        build_account(%{
-          institution: %{id: "bank_of_america", name: "Bank of America"},
-          id: "acc_a4140199141fc96b362f0"
-        })
+  describe "get_account/2" do
+    test "returns account for given id and token" do
+      account = AccountBuilder.get_account(@account1.token, @account1.account_id)
 
-      assert account == expected_account
+      assert %{
+               currency: "USD",
+               enrollment_id: "enr_o3oveb8h0pukpk616a000",
+               id: "acc_" <> _,
+               institution: %{id: _, name: _},
+               last_four: "5765",
+               links: %{
+                 balances: _,
+                 self: _,
+                 transactions: _
+               },
+               name: "Platinum Card",
+               status: "open",
+               subtype: "credit_card",
+               type: "credit"
+             } = account
     end
 
-    test "get_account/2 returns nil for not matching token" do
-      account = AccountBuilder.get_account("token_other", "acc_a4140199141fc96b362f0")
-
-      refute account
+    test "returns nil for not matching token" do
+      assert is_nil(AccountBuilder.get_account("token_other", "acc_other"))
     end
 
     test "accounts from list_accounts/1 accessible by get_account/2 only with the same token" do
-      token1 = "test_uno"
-      token2 = "test_duo"
-      accounts1 = AccountBuilder.list_accounts(token1)
-      accounts2 = AccountBuilder.list_accounts(token2)
+      accounts1 = AccountBuilder.list_accounts(@token1)
+      accounts2 = AccountBuilder.list_accounts(@token2)
 
       Enum.each(accounts1, fn account ->
-        assert AccountBuilder.get_account(token1, account.id)
-        refute AccountBuilder.get_account(token2, account.id)
+        assert AccountBuilder.get_account(@token1, account.id)
+        refute AccountBuilder.get_account(@token2, account.id)
       end)
 
       Enum.each(accounts2, fn account ->
-        refute AccountBuilder.get_account(token1, account.id)
-        assert AccountBuilder.get_account(token2, account.id)
+        refute AccountBuilder.get_account(@token1, account.id)
+        assert AccountBuilder.get_account(@token2, account.id)
       end)
-    end
-
-    defp build_account(opts) do
-      %{
-        currency: "USD",
-        enrollment_id: "enr_o3oveb8h0pukpk616a000",
-        id: opts.id,
-        institution: opts.institution,
-        last_four: "5765",
-        links: %{
-          balances: "https://api.teller.io/accounts/#{opts.id}/balances",
-          self: "https://api.teller.io/accounts/#{opts.id}",
-          transactions: "https://api.teller.io/accounts/#{opts.id}/transactions"
-        },
-        name: "Platinum Card",
-        status: "open",
-        subtype: "credit_card",
-        type: "credit"
-      }
     end
   end
 end
