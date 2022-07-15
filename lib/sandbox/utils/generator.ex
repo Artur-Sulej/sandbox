@@ -12,6 +12,6 @@ defmodule Sandbox.Utils.Generator do
   def generate_integer(string, max) do
     string
     |> :crypto.bytes_to_integer()
-    |> rem(max)
+    |> rem(max + 1)
   end
 end

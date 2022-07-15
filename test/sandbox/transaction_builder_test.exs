@@ -7,6 +7,7 @@ defmodule Sandbox.TransactionBuilderTest do
   @token2 "test_two"
   @account_id1 "acc_2776d00ed47e1bdd82f24"
   @account_id2 "acc_1a12637aded5310a22365"
+  @today ~D[2022-07-15]
 
   describe "list_transactions/2" do
     test "returns all transactions for given account" do
@@ -20,7 +21,7 @@ defmodule Sandbox.TransactionBuilderTest do
         assert %{
                  account_id: @account_id1,
                  amount: "-84.88",
-                 date: "2022-07-10",
+                 date: _,
                  description: "Electronic Withdrawal",
                  details: %{
                    category: "service",
@@ -41,9 +42,8 @@ defmodule Sandbox.TransactionBuilderTest do
 
     test "returns transactions for last 90 days" do
       transactions = TransactionBuilder.list_transactions(@token1, @account_id1)
-      sorted_trx = Enum.sort_by(transactions, & &1.date, &>=/2)
-      first_trx = List.first(sorted_trx)
-      last_trx = List.last(sorted_trx)
+      first_trx = List.first(transactions)
+      last_trx = List.last(transactions)
 
       end_date = Date.utc_today()
       start_date = Date.add(end_date, -89)
@@ -51,8 +51,24 @@ defmodule Sandbox.TransactionBuilderTest do
       end_date_comparison = Date.compare(end_date, Date.from_iso8601!(first_trx.date))
       start_date_comparison = Date.compare(start_date, Date.from_iso8601!(last_trx.date))
 
+      assert transactions == Enum.sort_by(transactions, & &1.date, &>=/2)
       assert :gt == end_date_comparison || :eq == end_date_comparison
       assert :lt == start_date_comparison || :eq == start_date_comparison
+    end
+
+    test "moving time window doesn't change transactions for same days" do
+      from_date1 = ~D[2022-04-26]
+      from_date2 = ~D[2022-07-14]
+
+      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1, from_date1)
+      transactions2 = TransactionBuilder.list_transactions(@token1, @account_id1, from_date2)
+      helper_list = transactions1 -- transactions2
+      trx_intersection = Enum.sort_by(transactions1 -- helper_list, & &1.date, &>=/2)
+
+      first_trx = List.first(trx_intersection)
+      last_trx = List.last(trx_intersection)
+
+      assert {first_trx.date, last_trx.date} == {"2022-04-26", "2022-04-16"}
     end
 
     test "returns constant transactions and different for two accounts" do
@@ -65,39 +81,39 @@ defmodule Sandbox.TransactionBuilderTest do
 
   describe "get_transaction/3" do
     test "returns transaction only for correct token and ids" do
-      trx_id = "trx_2f76a945be343d16960e4"
+      trx_id = "trx_7018e716c17bd1457eaa8"
 
-      assert TransactionBuilder.get_transaction(@token1, @account_id1, trx_id) ==
-               build_transaction(trx_id, @account_id1)
+      assert TransactionBuilder.get_transaction(@token1, @account_id1, trx_id, @today) ==
+               build_transaction(trx_id, @account_id1, "2022-04-17")
 
-      refute TransactionBuilder.get_transaction("other_token", @account_id1, trx_id)
-      refute TransactionBuilder.get_transaction(@token1, "other_account", trx_id)
+      refute TransactionBuilder.get_transaction("other_token", @account_id1, trx_id, @today)
+      refute TransactionBuilder.get_transaction(@token1, "other_account", trx_id, @today)
       refute TransactionBuilder.get_transaction(@token1, @account_id1, "other_trx")
     end
 
     test "listed transaction accessible via get_transaction/3" do
-      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1)
-      transactions2 = TransactionBuilder.list_transactions(@token2, @account_id2)
+      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1, @today)
+      transactions2 = TransactionBuilder.list_transactions(@token2, @account_id2, @today)
 
       assert Enum.any?(transactions1)
       assert Enum.any?(transactions2)
 
       Enum.each(transactions1, fn transaction ->
-        assert TransactionBuilder.get_transaction(@token1, @account_id1, transaction.id)
-        refute TransactionBuilder.get_transaction(@token2, @account_id2, transaction.id)
+        assert TransactionBuilder.get_transaction(@token1, @account_id1, transaction.id, @today)
+        refute TransactionBuilder.get_transaction(@token2, @account_id2, transaction.id, @today)
       end)
 
       Enum.each(transactions2, fn transaction ->
-        refute TransactionBuilder.get_transaction(@token1, @account_id1, transaction.id)
-        assert TransactionBuilder.get_transaction(@token2, @account_id2, transaction.id)
+        refute TransactionBuilder.get_transaction(@token1, @account_id1, transaction.id, @today)
+        assert TransactionBuilder.get_transaction(@token2, @account_id2, transaction.id, @today)
       end)
     end
 
-    defp build_transaction(trx_id, account_id) do
+    defp build_transaction(trx_id, account_id, date) do
       %{
         account_id: account_id,
         amount: "-84.88",
-        date: "2022-07-10",
+        date: date,
         description: "Electronic Withdrawal",
         details: %{
           category: "service",
