@@ -2,19 +2,15 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   alias Sandbox.Accounts.AccountBuilder
   alias Sandbox.Utils.Generator
 
+  @days_count 90
+  @min_trx_per_day 0
+  @max_trx_per_day 5
+
   def list_transactions(token, account_id, from_date \\ nil) do
     if AccountBuilder.get_account(token, account_id) do
       from_date = from_date || Date.utc_today()
-
-      Enum.flat_map(0..89, fn day_index ->
-        date = Date.add(from_date, -day_index)
-        trx_count = Generator.generate_integer("trx_#{token}_#{date}", 5)
-
-        Enum.map(0..trx_count, fn sub_day_index ->
-          trx_id = Generator.generate_id("trx_#{token}_#{date}_#{sub_day_index}", "trx")
-          build_transaction(trx_id, account_id, date)
-        end)
-      end)
+      transactions = generate_transactions(token, account_id, from_date)
+      transactions
     else
       []
     end
@@ -24,6 +20,22 @@ defmodule Sandbox.Accounts.TransactionBuilder do
     token
     |> list_transactions(account_id, date)
     |> Enum.find(fn %{id: id} -> id == trx_id end)
+  end
+
+  defp generate_transactions(token, account_id, from_date) do
+    Enum.flat_map(0..(@days_count - 1), fn day_index ->
+      date = Date.add(from_date, -day_index)
+      generate_transactions_for_date(date, token, account_id)
+    end)
+  end
+
+  defp generate_transactions_for_date(date, token, account_id) do
+    trx_count = Generator.generate_integer("trx_#{token}_#{date}", @max_trx_per_day)
+
+    Enum.map(@min_trx_per_day..trx_count, fn sub_day_index ->
+      trx_id = Generator.generate_id("trx_#{token}_#{date}_#{sub_day_index}", "trx")
+      build_transaction(trx_id, account_id, date)
+    end)
   end
 
   defp build_transaction(trx_id, account_id, date) do
