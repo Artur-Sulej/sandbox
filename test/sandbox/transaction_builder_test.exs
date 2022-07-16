@@ -72,10 +72,23 @@ defmodule Sandbox.TransactionBuilderTest do
     end
 
     test "returns constant transactions and different for two accounts" do
-      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1)
-      transactions2 = TransactionBuilder.list_transactions(@token2, @account_id2)
+      transactions1a = TransactionBuilder.list_transactions(@token1, @account_id1)
+      transactions1b = TransactionBuilder.list_transactions(@token1, @account_id1)
+      transactions2a = TransactionBuilder.list_transactions(@token2, @account_id2)
+      transactions2b = TransactionBuilder.list_transactions(@token2, @account_id2)
 
-      assert transactions2 != transactions1
+      assert transactions1a == transactions1b
+      assert transactions2a == transactions2b
+      assert transactions2a != transactions1a
+    end
+
+    test "limiting transactions with count param" do
+      count = 4
+      trx_all = TransactionBuilder.list_transactions(@token1, @account_id1, @today)
+      trx_with_count = TransactionBuilder.list_transactions(@token1, @account_id1, @today, count)
+
+      assert count == Enum.count(trx_with_count)
+      assert trx_with_count == Enum.take(trx_all, count)
     end
   end
 

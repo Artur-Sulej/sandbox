@@ -6,11 +6,16 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   @min_trx_per_day 0
   @max_trx_per_day 5
 
-  def list_transactions(token, account_id, from_date \\ nil) do
+  def list_transactions(token, account_id, from_date \\ nil, transactions_count \\ nil) do
     if AccountBuilder.get_account(token, account_id) do
       from_date = from_date || Date.utc_today()
       transactions = generate_transactions(token, account_id, from_date)
-      transactions
+
+      if transactions_count do
+        Enum.take(transactions, transactions_count)
+      else
+        transactions
+      end
     else
       []
     end
@@ -19,7 +24,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   def get_transaction(token, account_id, trx_id, date \\ nil) do
     token
     |> list_transactions(account_id, date)
-    |> Enum.find(fn %{id: id} -> id == trx_id end)
+    |> Enum.find(&(&1.id == trx_id))
   end
 
   defp generate_transactions(token, account_id, from_date) do
