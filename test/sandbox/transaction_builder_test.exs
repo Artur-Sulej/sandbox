@@ -90,6 +90,18 @@ defmodule Sandbox.TransactionBuilderTest do
       assert count == Enum.count(trx_with_count)
       assert trx_with_count == Enum.take(trx_all, count)
     end
+
+    test "paginating transactions with id and count" do
+      count = 2
+      trx_all = TransactionBuilder.list_transactions(@token1, @account_id1, @today)
+      [_, %{id: from_id}, trx_1, trx_2 | _tail] = trx_all
+
+      trx_with_count_from_id =
+        TransactionBuilder.list_transactions(@token1, @account_id1, @today, count, from_id)
+
+      assert count == Enum.count(trx_with_count_from_id)
+      assert [^trx_1, ^trx_2] = trx_with_count_from_id
+    end
   end
 
   describe "get_transaction/3" do
