@@ -77,6 +77,10 @@ defmodule Sandbox.TransactionBuilderTest do
       transactions2a = TransactionBuilder.list_transactions(@token2, @account_id2)
       transactions2b = TransactionBuilder.list_transactions(@token2, @account_id2)
 
+      assert Enum.any?(transactions1a)
+      assert Enum.any?(transactions1b)
+      assert Enum.any?(transactions2a)
+      assert Enum.any?(transactions2b)
       assert transactions1a == transactions1b
       assert transactions2a == transactions2b
       assert transactions2a != transactions1a
@@ -113,7 +117,7 @@ defmodule Sandbox.TransactionBuilderTest do
 
       refute TransactionBuilder.get_transaction("other_token", @account_id1, trx_id, @today)
       refute TransactionBuilder.get_transaction(@token1, "other_account", trx_id, @today)
-      refute TransactionBuilder.get_transaction(@token1, @account_id1, "other_trx")
+      refute TransactionBuilder.get_transaction(@token1, @account_id1, "other_trx", @today)
     end
 
     test "listed transaction accessible via get_transaction/3" do

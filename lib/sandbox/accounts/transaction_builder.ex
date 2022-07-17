@@ -15,35 +15,33 @@ defmodule Sandbox.Accounts.TransactionBuilder do
       ) do
     if AccountBuilder.get_account(token, account_id) do
       from_date = from_date || Date.utc_today()
-      transactions = generate_transactions(token, account_id, from_date)
 
-      cond do
-        from_id && transactions_count ->
-          index = Enum.find_index(transactions, &(&1.id == from_id))
-          Enum.slice(transactions, (index + 1)..(index + transactions_count))
-
-        transactions_count ->
-          Enum.take(transactions, transactions_count)
-
-        true ->
-          transactions
-      end
+      token
+      |> transactions_stream(account_id, from_date)
+      |> drop_until_id(from_id)
+      |> take(transactions_count)
     else
       []
     end
   end
 
   def get_transaction(token, account_id, trx_id, date \\ nil) do
-    token
-    |> list_transactions(account_id, date)
-    |> Enum.find(&(&1.id == trx_id))
+    if AccountBuilder.get_account(token, account_id) do
+      token
+      |> transactions_stream(account_id, date)
+      |> Stream.filter(&(&1.id == trx_id))
+      |> Enum.take(1)
+      |> List.first()
+    else
+      nil
+    end
   end
 
-  defp generate_transactions(token, account_id, from_date) do
-    Enum.flat_map(0..(@days_count - 1), fn day_index ->
-      date = Date.add(from_date, -day_index)
-      generate_transactions_for_date(date, token, account_id)
-    end)
+  defp transactions_stream(token, account_id, from_date) do
+    from_date
+    |> Stream.iterate(&Date.add(&1, -1))
+    |> Stream.take(@days_count)
+    |> Stream.flat_map(&generate_transactions_for_date(&1, token, account_id))
   end
 
   defp generate_transactions_for_date(date, token, account_id) do
@@ -53,6 +51,24 @@ defmodule Sandbox.Accounts.TransactionBuilder do
       trx_id = Generator.generate_id("trx_#{token}_#{date}_#{sub_day_index}", "trx")
       build_transaction(trx_id, account_id, date)
     end)
+  end
+
+  defp take(stream, _count = nil) do
+    Enum.to_list(stream)
+  end
+
+  defp take(stream, count) do
+    Enum.take(stream, count)
+  end
+
+  defp drop_until_id(stream, _from_id = nil) do
+    stream
+  end
+
+  defp drop_until_id(stream, from_id) do
+    stream
+    |> Stream.drop_while(&(&1.id != from_id))
+    |> Stream.drop(1)
   end
 
   defp build_transaction(trx_id, account_id, date) do
