@@ -20,7 +20,7 @@ defmodule Sandbox.TransactionBuilderTest do
       Enum.each(transactions1, fn trx ->
         assert %{
                  account_id: @account_id1,
-                 amount: "-84.88",
+                 amount: _,
                  date: _,
                  description: "Electronic Withdrawal",
                  details: %{
@@ -52,8 +52,8 @@ defmodule Sandbox.TransactionBuilderTest do
       start_date_comparison = Date.compare(start_date, Date.from_iso8601!(last_trx.date))
 
       assert transactions == Enum.sort_by(transactions, & &1.date, &>=/2)
-      assert :gt == end_date_comparison || :eq == end_date_comparison
-      assert :lt == start_date_comparison || :eq == start_date_comparison
+      assert end_date_comparison in [:gt, :eq]
+      assert start_date_comparison in [:lt, :eq]
     end
 
     test "moving time window doesn't change transactions for same days" do
@@ -110,10 +110,10 @@ defmodule Sandbox.TransactionBuilderTest do
 
   describe "get_transaction/3" do
     test "returns transaction only for correct token and ids" do
-      trx_id = "trx_7018e716c17bd1457eaa8"
+      trx_id = "trx_d01e941bff5e5a22782a2"
 
       assert TransactionBuilder.get_transaction(@token1, @account_id1, trx_id, @today) ==
-               build_transaction(trx_id, @account_id1, "2022-04-17")
+               build_transaction(trx_id, @account_id1, "2022-06-30", "-43.59")
 
       refute TransactionBuilder.get_transaction("other_token", @account_id1, trx_id, @today)
       refute TransactionBuilder.get_transaction(@token1, "other_account", trx_id, @today)
@@ -138,10 +138,10 @@ defmodule Sandbox.TransactionBuilderTest do
       end)
     end
 
-    defp build_transaction(trx_id, account_id, date) do
+    defp build_transaction(trx_id, account_id, date, amount) do
       %{
         account_id: account_id,
-        amount: "-84.88",
+        amount: amount,
         date: date,
         description: "Electronic Withdrawal",
         details: %{
