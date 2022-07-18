@@ -5,6 +5,24 @@ defmodule Sandbox.LedgerBehaviour do
   @type token :: String.t()
   @type base_url :: String.t()
   @type id :: String.t()
+
+  @type list_transactions_args :: %{
+          optional(:from_date) => Date.t(),
+          token: token,
+          account_id: id,
+          base_url: base_url,
+          from_id: id | nil,
+          transactions_count: non_neg_integer() | nil
+        }
+
+  @type get_transaction_args :: %{
+          optional(:from_date) => Date.t(),
+          token: token,
+          id: id,
+          account_id: id,
+          base_url: base_url
+        }
+
   @type transaction :: %{
           id: id,
           account_id: id,
@@ -50,21 +68,6 @@ defmodule Sandbox.LedgerBehaviour do
 
   @callback list_accounts(token, base_url) :: [account]
   @callback get_account(token, id, base_url) :: account | nil
-
-  @callback list_transactions(%{
-              token: token,
-              account_id: id,
-              base_url: base_url,
-              from_date: Date.t(),
-              from_id: id,
-              transactions_count: integer()
-            }) :: [transaction]
-
-  @callback get_transaction(%{
-              token: token,
-              id: id,
-              account_id: id,
-              base_url: base_url,
-              from_date: Date.t()
-            }) :: transaction | nil
+  @callback list_transactions(list_transactions_args) :: [transaction]
+  @callback get_transaction(get_transaction_args) :: transaction | nil
 end

@@ -3,7 +3,7 @@ defmodule SandboxWeb.AccountControllerTest do
   import Hammox
   setup :verify_on_exit!
 
-  @account_id "acc_4d5d38b527402c061bc0d"
+  @account_id "acc_1"
 
   setup %{conn: conn} do
     conn = put_req_header(conn, "authorization", "Basic dGVzdF93YXp6dXA6")

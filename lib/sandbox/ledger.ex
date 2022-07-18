@@ -28,15 +28,15 @@ defmodule Sandbox.Ledger do
   Returns a list of transactions for a given account.
   """
   @impl true
-  def list_transactions(opts) do
-    TransactionBuilder.list_transactions(opts)
+  def list_transactions(args) do
+    TransactionBuilder.list_transactions(args)
   end
 
   @doc """
   Returns a single transaction.
   """
   @impl true
-  def get_transaction(opts) do
-    TransactionBuilder.get_transaction(opts)
+  def get_transaction(args) do
+    TransactionBuilder.get_transaction(args)
   end
 end
