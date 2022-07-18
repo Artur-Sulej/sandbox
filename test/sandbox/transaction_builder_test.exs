@@ -8,7 +8,7 @@ defmodule Sandbox.TransactionBuilderTest do
   @account_id1 "acc_2776d00ed47e1bdd82f24"
   @account_id2 "acc_1a12637aded5310a22365"
   @from_date ~D[2022-07-15]
-  @base_url "https://api.example.com"
+  @base_url Application.compile_env!(:sandbox, :base_url)
 
   describe "list_transactions/2" do
     test "returns all transactions for given account" do

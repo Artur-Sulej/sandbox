@@ -9,15 +9,15 @@ defmodule Sandbox.Accounts do
   @doc """
   Returns a list of accounts.
   """
-  def list_accounts(token) do
-    AccountBuilder.list_accounts(token)
+  def list_accounts(token, base_url) do
+    AccountBuilder.list_accounts(token, base_url)
   end
 
   @doc """
   Returns a single account for a given id.
   """
-  def get_account(token, id) do
-    AccountBuilder.get_account(token, id)
+  def get_account(token, id, base_url) do
+    AccountBuilder.get_account(token, id, base_url)
   end
 
   @doc """

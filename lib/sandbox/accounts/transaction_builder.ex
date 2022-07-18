@@ -10,7 +10,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   @opening_balance 100_000
 
   def list_transactions(opts) do
-    if AccountBuilder.get_account(opts.token, opts.account_id) do
+    if AccountBuilder.get_account(opts.token, opts.account_id, opts.base_url) do
       from_date = Map.get_lazy(opts, :from_date, &Date.utc_today/0)
 
       opts.account_id
@@ -23,7 +23,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   end
 
   def get_transaction(opts) do
-    if AccountBuilder.get_account(opts.token, opts.account_id) do
+    if AccountBuilder.get_account(opts.token, opts.account_id, opts.base_url) do
       opts.account_id
       |> transactions_stream(opts[:from_date], opts.base_url)
       |> Stream.filter(&(&1.id == opts.id))

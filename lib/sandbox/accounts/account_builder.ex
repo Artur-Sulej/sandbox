@@ -4,21 +4,21 @@ defmodule Sandbox.Accounts.AccountBuilder do
 
   @max_count 4
 
-  def list_accounts(token) do
+  def list_accounts(token, base_url) do
     token
     |> get_accounts_count()
     |> (&(1..&1)).()
     |> Enum.map(&Generator.generate_id("acc_#{token}_#{&1}", "acc"))
-    |> Enum.map(&build_account/1)
+    |> Enum.map(&build_account(&1, base_url))
   end
 
-  def get_account(token, account_id) do
+  def get_account(token, account_id, base_url) do
     token
-    |> list_accounts()
+    |> list_accounts(base_url)
     |> Enum.find(fn %{id: id} -> id == account_id end)
   end
 
-  defp build_account(id) do
+  defp build_account(id, base_url) do
     %{
       currency: "USD",
       enrollment_id: "enr_o3oveb8h0pukpk616a000",
@@ -26,9 +26,9 @@ defmodule Sandbox.Accounts.AccountBuilder do
       institution: get_institution(id),
       last_four: "5765",
       links: %{
-        balances: "https://api.teller.io/accounts/#{id}/balances",
-        self: "https://api.teller.io/accounts/#{id}",
-        transactions: "https://api.teller.io/accounts/#{id}/transactions"
+        balances: "#{base_url}/accounts/#{id}/balances",
+        self: "#{base_url}/accounts/#{id}",
+        transactions: "#{base_url}/accounts/#{id}/transactions"
       },
       name: "Platinum Card",
       status: "open",
