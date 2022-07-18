@@ -4,7 +4,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   alias Sandbox.Accounts.Labels.Merchants
 
   @days_count 90
-  @max_trx_per_day 5
+  @max_txn_per_day 5
   @opening_date ~D[2022-04-15]
   @max_amount_in_subunits 10000
   @opening_balance 100_000
@@ -28,11 +28,11 @@ defmodule Sandbox.Accounts.TransactionBuilder do
     end
   end
 
-  def get_transaction(token, account_id, trx_id, date \\ nil) do
+  def get_transaction(token, account_id, txn_id, date \\ nil) do
     if AccountBuilder.get_account(token, account_id) do
       account_id
       |> transactions_stream(date)
-      |> Stream.filter(&(&1.id == trx_id))
+      |> Stream.filter(&(&1.id == txn_id))
       |> Enum.take(1)
       |> List.first()
     else
@@ -47,7 +47,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
     from_date
     |> Stream.iterate(&Date.add(&1, -1))
     |> Stream.take(days_since_opening)
-    |> Stream.flat_map(&generate_trx_data_for_date(&1, account_id))
+    |> Stream.flat_map(&generate_txn_data_for_date(&1, account_id))
     |> Enum.to_list()
     |> Enum.reverse()
     |> Stream.scan(%{running_balance: @opening_balance}, fn item, prev ->
@@ -60,19 +60,19 @@ defmodule Sandbox.Accounts.TransactionBuilder do
     |> Stream.map(&build_transaction(&1, account_id))
   end
 
-  defp generate_trx_data_for_date(date, account_id) do
-    trx_count = Generator.generate_integer("trx_#{account_id}_#{date}", @max_trx_per_day)
+  defp generate_txn_data_for_date(date, account_id) do
+    txn_count = Generator.generate_integer("txn_#{account_id}_#{date}", @max_txn_per_day)
 
-    case trx_count do
+    case txn_count do
       0 ->
         []
 
-      trx_count ->
-        Enum.map(1..trx_count, fn sub_day_index ->
-          seed = "trx_#{account_id}_#{date}_#{sub_day_index}"
-          trx_id = Generator.generate_id(seed, "trx")
+      txn_count ->
+        Enum.map(1..txn_count, fn sub_day_index ->
+          seed = "txn_#{account_id}_#{date}_#{sub_day_index}"
+          txn_id = Generator.generate_id(seed, "txn")
           amount = -1 * Generator.generate_integer(seed, @max_amount_in_subunits) / 100
-          %{id: trx_id, date: date, amount: amount}
+          %{id: txn_id, date: date, amount: amount}
         end)
     end
   end
@@ -96,10 +96,10 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   end
 
   defp build_transaction(
-         %{id: trx_id, date: date, amount: amount, running_balance: running_balance},
+         %{id: txn_id, date: date, amount: amount, running_balance: running_balance},
          account_id
        ) do
-    merchant = Generator.random_item(Merchants.get_values(), trx_id)
+    merchant = Generator.random_item(Merchants.get_values(), txn_id)
 
     %{
       account_id: account_id,
@@ -114,10 +114,10 @@ defmodule Sandbox.Accounts.TransactionBuilder do
         },
         processing_status: "complete"
       },
-      id: trx_id,
+      id: txn_id,
       links: %{
         account: "https://api.teller.io/accounts/#{account_id}",
-        self: "https://api.teller.io/accounts/#{account_id}/transactions/#{trx_id}"
+        self: "https://api.teller.io/accounts/#{account_id}/transactions/#{txn_id}"
       },
       running_balance: :erlang.float_to_binary(running_balance, decimals: 2),
       status: "pending",
