@@ -1,6 +1,7 @@
 defmodule Sandbox.Accounts.TransactionBuilder do
   alias Sandbox.Accounts.AccountBuilder
   alias Sandbox.Utils.Generator
+  alias Sandbox.Accounts.Labels.Merchants
 
   @days_count 90
   @max_trx_per_day 5
@@ -98,11 +99,13 @@ defmodule Sandbox.Accounts.TransactionBuilder do
          %{id: trx_id, date: date, amount: amount, running_balance: running_balance},
          account_id
        ) do
+    merchant = Generator.random_item(Merchants.get_values(), trx_id)
+
     %{
       account_id: account_id,
       amount: :erlang.float_to_binary(amount, decimals: 2),
       date: Date.to_string(date),
-      description: "Electronic Withdrawal",
+      description: merchant,
       details: %{
         category: "service",
         counterparty: %{

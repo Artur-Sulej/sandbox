@@ -22,7 +22,7 @@ defmodule Sandbox.TransactionBuilderTest do
                  account_id: @account_id1,
                  amount: _,
                  date: _,
-                 description: "Electronic Withdrawal",
+                 description: _,
                  details: %{
                    category: "service",
                    counterparty: %{name: "BANK OF THE WEST", type: "organization"},
@@ -141,6 +141,7 @@ defmodule Sandbox.TransactionBuilderTest do
                  date: "2022-06-30",
                  amount: "-43.59",
                  running_balance: "90599.23",
+                 description: "Domino's Pizza",
                  account_id: @account_id1
                })
 
@@ -172,13 +173,14 @@ defmodule Sandbox.TransactionBuilderTest do
            date: date,
            amount: amount,
            running_balance: running_balance,
+           description: description,
            account_id: account_id
          }) do
       %{
         account_id: account_id,
         amount: amount,
         date: date,
-        description: "Electronic Withdrawal",
+        description: description,
         details: %{
           category: "service",
           counterparty: %{
