@@ -33,7 +33,7 @@ defmodule Sandbox.TransactionBuilderTest do
                    account: _,
                    self: _
                  },
-                 running_balance: nil,
+                 running_balance: _,
                  status: "pending",
                  type: "card_payment"
                } = trx
@@ -106,6 +106,29 @@ defmodule Sandbox.TransactionBuilderTest do
       assert count == Enum.count(trx_with_count_from_id)
       assert [^trx_1, ^trx_2] = trx_with_count_from_id
     end
+
+    test "transactions have a running balance" do
+      trx = TransactionBuilder.list_transactions(@token2, @account_id2, @today, 3)
+
+      [
+        %{amount: amount_string3, running_balance: running_balance_string3},
+        %{amount: amount_string2, running_balance: running_balance_string2},
+        %{amount: amount_string1, running_balance: running_balance_string1}
+      ] = trx
+
+      {amount1, ""} = Float.parse(amount_string1)
+      {amount2, ""} = Float.parse(amount_string2)
+      {amount3, ""} = Float.parse(amount_string3)
+      {running_balance1, ""} = Float.parse(running_balance_string1)
+      {running_balance2, ""} = Float.parse(running_balance_string2)
+      {running_balance3, ""} = Float.parse(running_balance_string3)
+
+      assert amount1 < 0
+      assert amount2 < 0
+      assert amount3 < 0
+      assert running_balance1 + amount2 == running_balance2
+      assert running_balance2 + amount3 == running_balance3
+    end
   end
 
   describe "get_transaction/3" do
@@ -113,7 +136,13 @@ defmodule Sandbox.TransactionBuilderTest do
       trx_id = "trx_d01e941bff5e5a22782a2"
 
       assert TransactionBuilder.get_transaction(@token1, @account_id1, trx_id, @today) ==
-               build_transaction(trx_id, @account_id1, "2022-06-30", "-43.59")
+               build_transaction(%{
+                 id: trx_id,
+                 date: "2022-06-30",
+                 amount: "-43.59",
+                 running_balance: "90599.23",
+                 account_id: @account_id1
+               })
 
       refute TransactionBuilder.get_transaction("other_token", @account_id1, trx_id, @today)
       refute TransactionBuilder.get_transaction(@token1, "other_account", trx_id, @today)
@@ -138,7 +167,13 @@ defmodule Sandbox.TransactionBuilderTest do
       end)
     end
 
-    defp build_transaction(trx_id, account_id, date, amount) do
+    defp build_transaction(%{
+           id: trx_id,
+           date: date,
+           amount: amount,
+           running_balance: running_balance,
+           account_id: account_id
+         }) do
       %{
         account_id: account_id,
         amount: amount,
@@ -157,7 +192,7 @@ defmodule Sandbox.TransactionBuilderTest do
           account: "https://api.teller.io/accounts/#{account_id}",
           self: "https://api.teller.io/accounts/#{account_id}/transactions/#{trx_id}"
         },
-        running_balance: nil,
+        running_balance: running_balance,
         status: "pending",
         type: "card_payment"
       }

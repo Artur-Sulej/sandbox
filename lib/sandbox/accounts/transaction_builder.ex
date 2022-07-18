@@ -6,6 +6,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   @max_trx_per_day 5
   @opening_date ~D[2022-04-15]
   @max_amount_in_subunits 10000
+  @opening_balance 100_000
 
   def list_transactions(
         token,
@@ -46,7 +47,15 @@ defmodule Sandbox.Accounts.TransactionBuilder do
     |> Stream.iterate(&Date.add(&1, -1))
     |> Stream.take(days_since_opening)
     |> Stream.flat_map(&generate_trx_data_for_date(&1, account_id))
+    |> Enum.to_list()
+    |> Enum.reverse()
+    |> Stream.scan(%{running_balance: @opening_balance}, fn item, prev ->
+      running_balance = item.amount + prev.running_balance
+      Map.put(item, :running_balance, running_balance)
+    end)
     |> Stream.filter(fn %{date: date} -> Date.compare(earliest_date, date) in [:lt, :eq] end)
+    |> Enum.to_list()
+    |> Enum.reverse()
     |> Stream.map(&build_transaction(&1, account_id))
   end
 
@@ -85,7 +94,10 @@ defmodule Sandbox.Accounts.TransactionBuilder do
     |> Stream.drop(1)
   end
 
-  defp build_transaction(%{id: trx_id, date: date, amount: amount}, account_id) do
+  defp build_transaction(
+         %{id: trx_id, date: date, amount: amount, running_balance: running_balance},
+         account_id
+       ) do
     %{
       account_id: account_id,
       amount: :erlang.float_to_binary(amount, decimals: 2),
@@ -104,7 +116,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
         account: "https://api.teller.io/accounts/#{account_id}",
         self: "https://api.teller.io/accounts/#{account_id}/transactions/#{trx_id}"
       },
-      running_balance: nil,
+      running_balance: :erlang.float_to_binary(running_balance, decimals: 2),
       status: "pending",
       type: "card_payment"
     }
