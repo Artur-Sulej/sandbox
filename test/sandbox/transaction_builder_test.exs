@@ -7,12 +7,24 @@ defmodule Sandbox.TransactionBuilderTest do
   @token2 "test_two"
   @account_id1 "acc_2776d00ed47e1bdd82f24"
   @account_id2 "acc_1a12637aded5310a22365"
-  @today ~D[2022-07-15]
+  @from_date ~D[2022-07-15]
+  @base_url "https://api.example.com"
 
   describe "list_transactions/2" do
     test "returns all transactions for given account" do
-      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1)
-      transactions2 = TransactionBuilder.list_transactions(@token2, @account_id1)
+      transactions1 =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url
+        })
+
+      transactions2 =
+        TransactionBuilder.list_transactions(%{
+          token: @token2,
+          account_id: @account_id1,
+          base_url: @base_url
+        })
 
       assert Enum.any?(transactions1)
       assert Enum.empty?(transactions2)
@@ -41,7 +53,13 @@ defmodule Sandbox.TransactionBuilderTest do
     end
 
     test "returns transactions for last 90 days" do
-      transactions = TransactionBuilder.list_transactions(@token1, @account_id1)
+      transactions =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url
+        })
+
       first_txn = List.first(transactions)
       last_txn = List.last(transactions)
 
@@ -60,8 +78,22 @@ defmodule Sandbox.TransactionBuilderTest do
       from_date1 = ~D[2022-04-26]
       from_date2 = ~D[2022-07-14]
 
-      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1, from_date1)
-      transactions2 = TransactionBuilder.list_transactions(@token1, @account_id1, from_date2)
+      transactions1 =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url,
+          from_date: from_date1
+        })
+
+      transactions2 =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url,
+          from_date: from_date2
+        })
+
       helper_list = transactions1 -- transactions2
       txn_intersection = Enum.sort_by(transactions1 -- helper_list, & &1.date, &>=/2)
 
@@ -72,10 +104,33 @@ defmodule Sandbox.TransactionBuilderTest do
     end
 
     test "returns constant transactions and different for two accounts" do
-      transactions1a = TransactionBuilder.list_transactions(@token1, @account_id1)
-      transactions1b = TransactionBuilder.list_transactions(@token1, @account_id1)
-      transactions2a = TransactionBuilder.list_transactions(@token2, @account_id2)
-      transactions2b = TransactionBuilder.list_transactions(@token2, @account_id2)
+      transactions1a =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url
+        })
+
+      transactions1b =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url
+        })
+
+      transactions2a =
+        TransactionBuilder.list_transactions(%{
+          token: @token2,
+          account_id: @account_id2,
+          base_url: @base_url
+        })
+
+      transactions2b =
+        TransactionBuilder.list_transactions(%{
+          token: @token2,
+          account_id: @account_id2,
+          base_url: @base_url
+        })
 
       assert Enum.any?(transactions1a)
       assert Enum.any?(transactions1b)
@@ -88,8 +143,23 @@ defmodule Sandbox.TransactionBuilderTest do
 
     test "limiting transactions with count param" do
       count = 4
-      txn_all = TransactionBuilder.list_transactions(@token1, @account_id1, @today)
-      txn_with_count = TransactionBuilder.list_transactions(@token1, @account_id1, @today, count)
+
+      txn_all =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url,
+          from_date: @from_date
+        })
+
+      txn_with_count =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url,
+          from_date: @from_date,
+          transactions_count: count
+        })
 
       assert count == Enum.count(txn_with_count)
       assert txn_with_count == Enum.take(txn_all, count)
@@ -97,18 +167,40 @@ defmodule Sandbox.TransactionBuilderTest do
 
     test "paginating transactions with id and count" do
       count = 2
-      txn_all = TransactionBuilder.list_transactions(@token1, @account_id1, @today)
+
+      txn_all =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url,
+          from_date: @from_date
+        })
+
       [_, %{id: from_id}, txn_1, txn_2 | _tail] = txn_all
 
       txn_with_count_from_id =
-        TransactionBuilder.list_transactions(@token1, @account_id1, @today, count, from_id)
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url,
+          from_date: @from_date,
+          transactions_count: count,
+          from_id: from_id
+        })
 
       assert count == Enum.count(txn_with_count_from_id)
       assert [^txn_1, ^txn_2] = txn_with_count_from_id
     end
 
     test "transactions have a running balance" do
-      txn = TransactionBuilder.list_transactions(@token2, @account_id2, @today, 3)
+      txn =
+        TransactionBuilder.list_transactions(%{
+          token: @token2,
+          account_id: @account_id2,
+          base_url: @base_url,
+          from_date: @from_date,
+          transactions_count: 3
+        })
 
       [
         %{amount: amount_string3, running_balance: running_balance_string3},
@@ -135,7 +227,13 @@ defmodule Sandbox.TransactionBuilderTest do
     test "returns transaction only for correct token and ids" do
       txn_id = "txn_1331cd70a7120add9637d"
 
-      assert TransactionBuilder.get_transaction(@token1, @account_id1, txn_id, @today) ==
+      assert TransactionBuilder.get_transaction(%{
+               token: @token1,
+               account_id: @account_id1,
+               base_url: @base_url,
+               id: txn_id,
+               from_date: @from_date
+             }) ==
                build_transaction(%{
                  id: txn_id,
                  date: "2022-06-30",
@@ -145,26 +243,85 @@ defmodule Sandbox.TransactionBuilderTest do
                  account_id: @account_id1
                })
 
-      refute TransactionBuilder.get_transaction("other_token", @account_id1, txn_id, @today)
-      refute TransactionBuilder.get_transaction(@token1, "other_account", txn_id, @today)
-      refute TransactionBuilder.get_transaction(@token1, @account_id1, "other_txn", @today)
+      refute TransactionBuilder.get_transaction(%{
+               token: "other_token",
+               account_id: @account_id1,
+               base_url: @base_url,
+               id: txn_id,
+               from_date: @from_date
+             })
+
+      refute TransactionBuilder.get_transaction(%{
+               token: @token1,
+               account_id: "other_account",
+               base_url: @base_url,
+               id: txn_id,
+               from_date: @from_date
+             })
+
+      refute TransactionBuilder.get_transaction(%{
+               token: @token1,
+               account_id: @account_id1,
+               base_url: @base_url,
+               id: "other_txn",
+               from_date: @from_date
+             })
     end
 
     test "listed transaction accessible via get_transaction/3" do
-      transactions1 = TransactionBuilder.list_transactions(@token1, @account_id1, @today)
-      transactions2 = TransactionBuilder.list_transactions(@token2, @account_id2, @today)
+      transactions1 =
+        TransactionBuilder.list_transactions(%{
+          token: @token1,
+          account_id: @account_id1,
+          base_url: @base_url,
+          from_date: @from_date
+        })
+
+      transactions2 =
+        TransactionBuilder.list_transactions(%{
+          token: @token2,
+          account_id: @account_id2,
+          base_url: @base_url,
+          from_date: @from_date
+        })
 
       assert Enum.any?(transactions1)
       assert Enum.any?(transactions2)
 
       Enum.each(transactions1, fn transaction ->
-        assert TransactionBuilder.get_transaction(@token1, @account_id1, transaction.id, @today)
-        refute TransactionBuilder.get_transaction(@token2, @account_id2, transaction.id, @today)
+        assert TransactionBuilder.get_transaction(%{
+                 token: @token1,
+                 account_id: @account_id1,
+                 base_url: @base_url,
+                 id: transaction.id,
+                 from_date: @from_date
+               })
+
+        refute TransactionBuilder.get_transaction(%{
+                 token: @token2,
+                 account_id: @account_id2,
+                 base_url: @base_url,
+                 id: transaction.id,
+                 from_date: @from_date
+               })
       end)
 
       Enum.each(transactions2, fn transaction ->
-        refute TransactionBuilder.get_transaction(@token1, @account_id1, transaction.id, @today)
-        assert TransactionBuilder.get_transaction(@token2, @account_id2, transaction.id, @today)
+        refute TransactionBuilder.get_transaction(%{
+                 token: @token1,
+                 account_id: @account_id1,
+                 base_url: @base_url,
+                 id: transaction.id,
+                 from_date: @from_date
+               })
+
+        assert TransactionBuilder.get_transaction(%{
+                 token: @token2,
+                 account_id: @account_id2,
+                 base_url: @base_url,
+                 id: transaction.id,
+                 from_date: @from_date
+               })
       end)
     end
 
@@ -191,8 +348,8 @@ defmodule Sandbox.TransactionBuilderTest do
         },
         id: txn_id,
         links: %{
-          account: "https://api.teller.io/accounts/#{account_id}",
-          self: "https://api.teller.io/accounts/#{account_id}/transactions/#{txn_id}"
+          account: "https://api.example.com/accounts/#{account_id}",
+          self: "https://api.example.com/accounts/#{account_id}/transactions/#{txn_id}"
         },
         running_balance: running_balance,
         status: "pending",

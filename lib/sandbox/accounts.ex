@@ -23,14 +23,14 @@ defmodule Sandbox.Accounts do
   @doc """
   Returns a list of transactions for a given account.
   """
-  def list_transactions(token, account_id) do
-    TransactionBuilder.list_transactions(token, account_id)
+  def list_transactions(opts) do
+    TransactionBuilder.list_transactions(opts)
   end
 
   @doc """
   Returns a single transaction.
   """
-  def get_transaction(token, account_id, id) do
-    TransactionBuilder.get_transaction(token, account_id, id)
+  def get_transaction(opts) do
+    TransactionBuilder.get_transaction(opts)
   end
 end

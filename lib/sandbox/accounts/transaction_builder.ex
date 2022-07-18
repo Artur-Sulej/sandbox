@@ -9,30 +9,24 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   @max_amount_in_subunits 10000
   @opening_balance 100_000
 
-  def list_transactions(
-        token,
-        account_id,
-        from_date \\ nil,
-        transactions_count \\ nil,
-        from_id \\ nil
-      ) do
-    if AccountBuilder.get_account(token, account_id) do
-      from_date = from_date || Date.utc_today()
+  def list_transactions(opts) do
+    if AccountBuilder.get_account(opts.token, opts.account_id) do
+      from_date = Map.get_lazy(opts, :from_date, &Date.utc_today/0)
 
-      account_id
-      |> transactions_stream(from_date)
-      |> drop_until_id(from_id)
-      |> take(transactions_count)
+      opts.account_id
+      |> transactions_stream(from_date, opts.base_url)
+      |> drop_until_id(opts[:from_id])
+      |> take(opts[:transactions_count])
     else
       []
     end
   end
 
-  def get_transaction(token, account_id, txn_id, date \\ nil) do
-    if AccountBuilder.get_account(token, account_id) do
-      account_id
-      |> transactions_stream(date)
-      |> Stream.filter(&(&1.id == txn_id))
+  def get_transaction(opts) do
+    if AccountBuilder.get_account(opts.token, opts.account_id) do
+      opts.account_id
+      |> transactions_stream(opts[:from_date], opts.base_url)
+      |> Stream.filter(&(&1.id == opts.id))
       |> Enum.take(1)
       |> List.first()
     else
@@ -40,7 +34,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
     end
   end
 
-  defp transactions_stream(account_id, from_date) do
+  defp transactions_stream(account_id, from_date, base_url) do
     days_since_opening = Date.diff(from_date, @opening_date)
     earliest_date = Date.add(from_date, -(@days_count - 1))
 
@@ -57,7 +51,7 @@ defmodule Sandbox.Accounts.TransactionBuilder do
     |> Stream.filter(fn %{date: date} -> Date.compare(earliest_date, date) in [:lt, :eq] end)
     |> Enum.to_list()
     |> Enum.reverse()
-    |> Stream.map(&build_transaction(&1, account_id))
+    |> Stream.map(&build_transaction(&1, account_id, base_url))
   end
 
   defp generate_txn_data_for_date(date, account_id) do
@@ -96,8 +90,14 @@ defmodule Sandbox.Accounts.TransactionBuilder do
   end
 
   defp build_transaction(
-         %{id: txn_id, date: date, amount: amount, running_balance: running_balance},
-         account_id
+         %{
+           id: txn_id,
+           date: date,
+           amount: amount,
+           running_balance: running_balance
+         },
+         account_id,
+         base_url
        ) do
     merchant = Generator.random_item(Merchants.get_values(), txn_id)
 
@@ -116,8 +116,8 @@ defmodule Sandbox.Accounts.TransactionBuilder do
       },
       id: txn_id,
       links: %{
-        account: "https://api.teller.io/accounts/#{account_id}",
-        self: "https://api.teller.io/accounts/#{account_id}/transactions/#{txn_id}"
+        account: "#{base_url}/accounts/#{account_id}",
+        self: "#{base_url}/accounts/#{account_id}/transactions/#{txn_id}"
       },
       running_balance: :erlang.float_to_binary(running_balance, decimals: 2),
       status: "pending",
