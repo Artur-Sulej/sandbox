@@ -1,10 +1,10 @@
-defmodule Sandbox.Accounts do
+defmodule Sandbox.Ledger do
   @moduledoc """
-  The Accounts context.
+  The Ledger context.
   """
 
-  alias Sandbox.Accounts.AccountBuilder
-  alias Sandbox.Accounts.TransactionBuilder
+  alias Sandbox.Ledger.AccountBuilder
+  alias Sandbox.Ledger.TransactionBuilder
 
   @doc """
   Returns a list of accounts.

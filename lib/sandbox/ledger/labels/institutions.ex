@@ -1,4 +1,4 @@
-defmodule Sandbox.Accounts.Labels.Institutions do
+defmodule Sandbox.Ledger.Labels.Institutions do
   @values ["Chase", "Bank of America", "Wells Fargo", "Citibank", "Capital One"]
 
   def get_values do

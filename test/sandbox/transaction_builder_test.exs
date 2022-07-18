@@ -1,7 +1,7 @@
 defmodule Sandbox.TransactionBuilderTest do
   use ExUnit.Case
 
-  alias Sandbox.Accounts.TransactionBuilder
+  alias Sandbox.Ledger.TransactionBuilder
 
   @token1 "test_one"
   @token2 "test_two"

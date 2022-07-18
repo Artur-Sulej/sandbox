@@ -1,4 +1,4 @@
-defmodule Sandbox.Accounts.Labels.Merchants do
+defmodule Sandbox.Ledger.Labels.Merchants do
   @values [
     "Uber",
     "Uber Eats",

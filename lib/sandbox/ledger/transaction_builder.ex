@@ -1,7 +1,7 @@
-defmodule Sandbox.Accounts.TransactionBuilder do
-  alias Sandbox.Accounts.AccountBuilder
+defmodule Sandbox.Ledger.TransactionBuilder do
+  alias Sandbox.Ledger.AccountBuilder
   alias Sandbox.Utils.Generator
-  alias Sandbox.Accounts.Labels.Merchants
+  alias Sandbox.Ledger.Labels.Merchants
 
   @days_count 90
   @max_txn_per_day 5
