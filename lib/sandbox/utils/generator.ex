@@ -10,7 +10,7 @@ defmodule Sandbox.Utils.Generator do
   end
 
   def generate_integer(string, max) do
-    string
+    :crypto.hash(:md5, string)
     |> :crypto.bytes_to_integer()
     |> rem(max + 1)
   end
