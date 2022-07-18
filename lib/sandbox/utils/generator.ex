@@ -14,4 +14,13 @@ defmodule Sandbox.Utils.Generator do
     |> :crypto.bytes_to_integer()
     |> rem(max + 1)
   end
+
+  def random_item(list, seed) do
+    seed_int =
+      :crypto.hash(:md5, seed)
+      |> :crypto.bytes_to_integer()
+
+    :rand.seed(:exsplus, {seed_int, seed_int, seed_int})
+    Enum.random(list)
+  end
 end

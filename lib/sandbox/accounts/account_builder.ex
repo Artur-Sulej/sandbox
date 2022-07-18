@@ -1,7 +1,8 @@
 defmodule Sandbox.Accounts.AccountBuilder do
-  @max_count 4
-
   alias Sandbox.Utils.Generator
+  alias Sandbox.Accounts.Labels.Institutions
+
+  @max_count 4
 
   def list_accounts(token) do
     token
@@ -22,7 +23,7 @@ defmodule Sandbox.Accounts.AccountBuilder do
       currency: "USD",
       enrollment_id: "enr_o3oveb8h0pukpk616a000",
       id: id,
-      institution: institution(id),
+      institution: get_institution(id),
       last_four: "5765",
       links: %{
         balances: "https://api.teller.io/accounts/#{id}/balances",
@@ -36,11 +37,8 @@ defmodule Sandbox.Accounts.AccountBuilder do
     }
   end
 
-  defp institution(token) do
-    seed_random(token)
-
-    institution_name =
-      Enum.random(["Chase", "Bank of America", "Wells Fargo", "Citibank", "Capital One"])
+  defp get_institution(seed) do
+    institution_name = Generator.random_item(Institutions.get_values(), seed)
 
     institution_id =
       institution_name
@@ -55,13 +53,7 @@ defmodule Sandbox.Accounts.AccountBuilder do
 
   defp get_accounts_count(token) do
     token
-    |> :crypto.bytes_to_integer()
-    |> rem(@max_count)
+    |> Generator.generate_integer(@max_count - 1)
     |> Kernel.+(1)
-  end
-
-  defp seed_random(seed) do
-    seed_int = :crypto.bytes_to_integer(seed)
-    :rand.seed(:exsplus, {seed_int, seed_int, seed_int})
   end
 end

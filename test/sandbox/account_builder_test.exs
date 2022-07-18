@@ -45,7 +45,7 @@ defmodule Sandbox.AccountBuilderTest do
     end
 
     test "returns differnt number of accounts" do
-      assert 2 == @token1 |> AccountBuilder.list_accounts() |> Enum.count()
+      assert 1 == @token1 |> AccountBuilder.list_accounts() |> Enum.count()
       assert 4 == @token2 |> AccountBuilder.list_accounts() |> Enum.count()
     end
   end
