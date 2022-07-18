@@ -14,3 +14,5 @@ config :logger, level: :warn
 config :phoenix, :plug_init_mode, :runtime
 
 config :sandbox, base_url: "https://api.example.com"
+
+config :sandbox, ledger: Sandbox.LedgerBehaviour.Mock
