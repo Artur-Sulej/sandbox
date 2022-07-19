@@ -27,9 +27,11 @@ defmodule Sandbox.Ledger.TransactionBuilder do
 
   def get_transaction(opts) do
     if account_valid?(opts.token, opts.account_id, opts.base_url) do
+      from_date = Map.get_lazy(opts, :from_date, &Date.utc_today/0)
+
       transaction =
         opts.account_id
-        |> transactions_stream(opts[:from_date], opts.base_url)
+        |> transactions_stream(from_date, opts.base_url)
         |> Stream.filter(&(&1.id == opts.id))
         |> Enum.take(1)
         |> List.first()

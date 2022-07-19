@@ -23,6 +23,12 @@ defmodule Sandbox.LedgerBehaviour do
           base_url: base_url
         }
 
+  @type get_account_details_args :: %{
+          token: token,
+          account_id: id,
+          base_url: base_url
+        }
+
   @type transaction :: %{
           id: id,
           account_id: id,
@@ -66,9 +72,23 @@ defmodule Sandbox.LedgerBehaviour do
           type: String.t()
         }
 
+  @type account_details :: %{
+          account_id: id,
+          account_number: String.t(),
+          links: %{
+            account: String.t(),
+            self: String.t()
+          },
+          routing_numbers: %{
+            ach: String.t()
+          }
+        }
+
   @callback list_accounts(token, base_url) :: {:ok, [account]} | {:error, :not_found}
   @callback get_account(token, id, base_url) :: {:ok, account} | {:error, :not_found}
   @callback list_transactions(list_transactions_args) ::
               {:ok, [transaction]} | {:error, :not_found}
   @callback get_transaction(get_transaction_args) :: {:ok, transaction} | {:error, :not_found}
+  @callback get_account_details(get_account_details_args) ::
+              {:ok, account_details} | {:error, :not_found}
 end

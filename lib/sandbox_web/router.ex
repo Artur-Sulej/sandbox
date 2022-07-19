@@ -21,6 +21,7 @@ defmodule SandboxWeb.Router do
 
     resources("/accounts", AccountController, only: [:index, :show]) do
       resources("/transactions", TransactionController, only: [:index, :show])
+      resources("/details", AccountDetailController, only: [:show], singleton: true)
     end
   end
 

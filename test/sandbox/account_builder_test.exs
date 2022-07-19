@@ -74,7 +74,7 @@ defmodule Sandbox.AccountBuilderTest do
              } = account
     end
 
-    test "returns nil for not matching token" do
+    test "returns error for not matching token" do
       assert assert {:error, :not_found} ==
                       AccountBuilder.get_account("token_other", "acc_other", @base_url)
     end

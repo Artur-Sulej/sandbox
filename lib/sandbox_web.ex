@@ -23,6 +23,7 @@ defmodule SandboxWeb do
 
       import Plug.Conn
       alias SandboxWeb.Router.Helpers, as: Routes
+      import SandboxWeb.Helpers.ParamsParser
     end
   end
 

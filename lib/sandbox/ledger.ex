@@ -6,6 +6,7 @@ defmodule Sandbox.Ledger do
   @behaviour Sandbox.LedgerBehaviour
 
   alias Sandbox.Ledger.AccountBuilder
+  alias Sandbox.Ledger.AccountDetailsBuilder
   alias Sandbox.Ledger.TransactionBuilder
 
   @doc """
@@ -38,5 +39,13 @@ defmodule Sandbox.Ledger do
   @impl true
   def get_transaction(args) do
     TransactionBuilder.get_transaction(args)
+  end
+
+  @doc """
+  Returns details for given account.
+  """
+  @impl true
+  def get_account_details(args) do
+    AccountDetailsBuilder.get_account_details(args)
   end
 end
