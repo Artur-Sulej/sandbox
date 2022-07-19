@@ -29,6 +29,12 @@ defmodule Sandbox.LedgerBehaviour do
           base_url: base_url
         }
 
+  @type get_account_balance_args :: %{
+          token: token,
+          account_id: id,
+          base_url: base_url
+        }
+
   @type transaction :: %{
           id: id,
           account_id: id,
@@ -84,6 +90,16 @@ defmodule Sandbox.LedgerBehaviour do
           }
         }
 
+  @type account_balance :: %{
+          account_id: id,
+          available: String.t(),
+          ledger: String.t(),
+          links: %{
+            account: String.t(),
+            self: String.t()
+          }
+        }
+
   @callback list_accounts(token, base_url) :: {:ok, [account]} | {:error, :not_found}
   @callback get_account(token, id, base_url) :: {:ok, account} | {:error, :not_found}
   @callback list_transactions(list_transactions_args) ::
@@ -91,4 +107,6 @@ defmodule Sandbox.LedgerBehaviour do
   @callback get_transaction(get_transaction_args) :: {:ok, transaction} | {:error, :not_found}
   @callback get_account_details(get_account_details_args) ::
               {:ok, account_details} | {:error, :not_found}
+  @callback get_account_balance(get_account_balance_args) ::
+              {:ok, account_balance} | {:error, :not_found}
 end
