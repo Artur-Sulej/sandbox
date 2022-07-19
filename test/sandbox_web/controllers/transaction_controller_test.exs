@@ -66,7 +66,7 @@ defmodule SandboxWeb.TransactionControllerTest do
         end
       )
 
-      params = [count: "wrong"]
+      params = [count: "-5"]
       conn = get(conn, Routes.account_transaction_path(conn, :index, @account_id), params)
       json_response(conn, 400)
     end

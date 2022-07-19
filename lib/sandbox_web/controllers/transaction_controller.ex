@@ -40,7 +40,7 @@ defmodule SandboxWeb.TransactionController do
     properties = [
       {"account_id", :string, true},
       {"from_id", :string, false},
-      {"count", :integer, false}
+      {"count", :positive_integer, false}
     ]
 
     case parse_params(params, properties) do
@@ -88,15 +88,15 @@ defmodule SandboxWeb.TransactionController do
       {"", _, true} -> :error
       {nil, _, _} -> nil
       {"", _, _} -> nil
-      {param, :integer, _} -> parse_integer(param)
+      {param, :positive_integer, _} -> parse_positive_integer(param)
       {param, :string, _} -> param
     end
   end
 
-  defp parse_integer(param) do
+  defp parse_positive_integer(param) do
     case Integer.parse(param) do
       :error -> :error
-      {int_param, ""} -> int_param
+      {int_param, ""} when int_param > 0 -> int_param
       _ -> :error
     end
   end
