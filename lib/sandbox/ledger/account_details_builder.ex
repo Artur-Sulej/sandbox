@@ -1,4 +1,6 @@
 defmodule Sandbox.Ledger.AccountDetailsBuilder do
+  @moduledoc false
+
   alias Sandbox.Ledger.AccountBuilder
 
   def get_account_details(opts) do

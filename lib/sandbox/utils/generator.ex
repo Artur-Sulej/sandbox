@@ -1,4 +1,8 @@
 defmodule Sandbox.Utils.Generator do
+  @moduledoc """
+  Generating deterministic values for given seed.
+  """
+
   @id_length 21
 
   def generate_id(string, prefix) do

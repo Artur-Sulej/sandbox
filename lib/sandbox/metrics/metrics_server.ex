@@ -1,4 +1,7 @@
 defmodule Sandbox.MetricsServer do
+  @moduledoc """
+  GenServer responsible for maintaining state for live metrics.
+  """
   use GenServer
 
   alias Phoenix.PubSub

@@ -5,8 +5,8 @@ defmodule Sandbox.Ledger do
 
   @behaviour Sandbox.LedgerBehaviour
 
-  alias Sandbox.Ledger.AccountBuilder
   alias Sandbox.Ledger.AccountBalanceBuilder
+  alias Sandbox.Ledger.AccountBuilder
   alias Sandbox.Ledger.AccountDetailsBuilder
   alias Sandbox.Ledger.TransactionBuilder
 

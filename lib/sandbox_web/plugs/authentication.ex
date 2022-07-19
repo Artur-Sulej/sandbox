@@ -1,4 +1,7 @@
 defmodule Sandbox.Plug.Authentication do
+  @moduledoc """
+  This plug parses auth header and assigns token.
+  """
   import Plug.Conn
 
   def init(options), do: options

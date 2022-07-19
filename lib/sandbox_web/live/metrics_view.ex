@@ -1,8 +1,8 @@
 defmodule SandboxWeb.MetricsView do
   use SandboxWeb, :live_view
 
-  alias Sandbox.MetricsServer
   alias Phoenix.PubSub
+  alias Sandbox.MetricsServer
 
   @topic MetricsServer.topic()
 

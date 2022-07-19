@@ -1,4 +1,6 @@
 defmodule Sandbox.Ledger.Labels.Merchants do
+  @moduledoc false
+
   @values [
     "Uber",
     "Uber Eats",

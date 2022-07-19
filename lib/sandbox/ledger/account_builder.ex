@@ -1,6 +1,8 @@
 defmodule Sandbox.Ledger.AccountBuilder do
-  alias Sandbox.Utils.Generator
+  @moduledoc false
+
   alias Sandbox.Ledger.Labels.Institutions
+  alias Sandbox.Utils.Generator
 
   @max_count 4
 

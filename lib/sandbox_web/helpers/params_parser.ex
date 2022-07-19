@@ -1,4 +1,6 @@
 defmodule SandboxWeb.Helpers.ParamsParser do
+  @moduledoc false
+
   def add_additional_data(params, conn) do
     data = %{
       token: conn.assigns.token,

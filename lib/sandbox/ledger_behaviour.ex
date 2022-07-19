@@ -1,4 +1,8 @@
 defmodule Sandbox.LedgerBehaviour do
+  @moduledoc """
+  Interface definition for ledger.
+  """
+
   @implementation Application.compile_env!(:sandbox, :ledger)
   def impl(), do: @implementation
 

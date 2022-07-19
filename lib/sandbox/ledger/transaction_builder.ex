@@ -1,12 +1,14 @@
 defmodule Sandbox.Ledger.TransactionBuilder do
+  @moduledoc false
+
   alias Sandbox.Ledger.AccountBuilder
-  alias Sandbox.Utils.Generator
   alias Sandbox.Ledger.Labels.Merchants
+  alias Sandbox.Utils.Generator
 
   @days_count 90
   @max_txn_per_day 5
   @opening_date ~D[2022-04-15]
-  @max_amount_in_subunits 10000
+  @max_amount_in_subunits 10_000
   @opening_balance 100_000
 
   def list_transactions(opts) do
