@@ -4,6 +4,16 @@ defmodule SandboxWeb.Router do
   pipeline :api do
     plug(:accepts, ["json"])
     plug(Sandbox.Plug.Authentication)
+    plug(Sandbox.Plug.Metrics)
+  end
+
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, {SandboxWeb.LayoutView, :root}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
   end
 
   scope "/", SandboxWeb do
@@ -12,6 +22,12 @@ defmodule SandboxWeb.Router do
     resources("/accounts", AccountController, only: [:index, :show]) do
       resources("/transactions", TransactionController, only: [:index, :show])
     end
+  end
+
+  scope "/metrics", SandboxWeb do
+    pipe_through :browser
+
+    live("/", MetricsView)
   end
 
   # Enables LiveDashboard only for development

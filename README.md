@@ -32,3 +32,5 @@ curl --request GET \
 --url http://localhost:4000/accounts \
 --header 'Authorization: Basic dGVzdF8xMjM0NTY6'
 ```
+## Metrics dashboard
+You can visit [`/metrics`](http://localhost:4000/metrics) to see LiveView metrics with requests count.

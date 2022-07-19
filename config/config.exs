@@ -10,9 +10,19 @@ import Config
 # Configures the endpoint
 config :sandbox, SandboxWeb.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: SandboxWeb.ErrorView, accepts: ~w(json), layout: false],
+  render_errors: [view: SandboxWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: Sandbox.PubSub,
   live_view: [signing_salt: "gWkWGjAu"]
+
+# Configure esbuild (the version is required)
+config :esbuild,
+  version: "0.14.29",
+  default: [
+    args:
+      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
 
 # Configures Elixir's Logger
 config :logger, :console,

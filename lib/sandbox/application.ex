@@ -8,6 +8,7 @@ defmodule Sandbox.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      Sandbox.MetricsServer,
       # Start the Telemetry supervisor
       SandboxWeb.Telemetry,
       # Start the PubSub system
