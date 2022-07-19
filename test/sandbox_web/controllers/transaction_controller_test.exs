@@ -56,6 +56,20 @@ defmodule SandboxWeb.TransactionControllerTest do
 
       assert response_keys == expected_keys()
     end
+
+    test "error for incorrect params", %{conn: conn} do
+      stub(
+        Sandbox.LedgerBehaviour.impl(),
+        :list_transactions,
+        fn _args ->
+          raise "Should not be called"
+        end
+      )
+
+      params = [count: "wrong"]
+      conn = get(conn, Routes.account_transaction_path(conn, :index, @account_id), params)
+      json_response(conn, 400)
+    end
   end
 
   describe "show" do
