@@ -66,8 +66,9 @@ defmodule Sandbox.LedgerBehaviour do
           type: String.t()
         }
 
-  @callback list_accounts(token, base_url) :: [account]
-  @callback get_account(token, id, base_url) :: account | nil
-  @callback list_transactions(list_transactions_args) :: [transaction]
-  @callback get_transaction(get_transaction_args) :: transaction | nil
+  @callback list_accounts(token, base_url) :: {:ok, [account]} | {:error, :not_found}
+  @callback get_account(token, id, base_url) :: {:ok, account} | {:error, :not_found}
+  @callback list_transactions(list_transactions_args) ::
+              {:ok, [transaction]} | {:error, :not_found}
+  @callback get_transaction(get_transaction_args) :: {:ok, transaction} | {:error, :not_found}
 end

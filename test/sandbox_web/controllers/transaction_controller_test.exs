@@ -23,7 +23,7 @@ defmodule SandboxWeb.TransactionControllerTest do
           assert is_nil(args[:from_id])
           assert is_nil(args[:transactions_count])
 
-          [build_transaction()]
+          {:ok, [build_transaction()]}
         end
       )
 
@@ -45,7 +45,7 @@ defmodule SandboxWeb.TransactionControllerTest do
           assert args[:from_id] == "txn_2"
           assert args[:transactions_count] == 5
 
-          [build_transaction()]
+          {:ok, [build_transaction()]}
         end
       )
 
@@ -82,7 +82,7 @@ defmodule SandboxWeb.TransactionControllerTest do
           assert args.base_url =~ "http"
           assert args.id == @transaction_id
 
-          build_transaction()
+          {:ok, build_transaction()}
         end
       )
 
@@ -91,6 +91,19 @@ defmodule SandboxWeb.TransactionControllerTest do
       response_keys = response_transaction |> Map.keys() |> Enum.sort()
 
       assert response_keys == expected_keys()
+    end
+
+    test "error if not found", %{conn: conn} do
+      stub(
+        Sandbox.LedgerBehaviour.impl(),
+        :get_transaction,
+        fn _args ->
+          {:error, :not_found}
+        end
+      )
+
+      conn = get(conn, Routes.account_transaction_path(conn, :show, @account_id, @transaction_id))
+      json_response(conn, 404)
     end
   end
 

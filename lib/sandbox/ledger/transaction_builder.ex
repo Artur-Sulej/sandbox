@@ -10,27 +10,43 @@ defmodule Sandbox.Ledger.TransactionBuilder do
   @opening_balance 100_000
 
   def list_transactions(opts) do
-    if AccountBuilder.get_account(opts.token, opts.account_id, opts.base_url) do
+    if account_valid?(opts.token, opts.account_id, opts.base_url) do
       from_date = Map.get_lazy(opts, :from_date, &Date.utc_today/0)
 
-      opts.account_id
-      |> transactions_stream(from_date, opts.base_url)
-      |> drop_until_id(opts[:from_id])
-      |> take(opts[:transactions_count])
+      transactions =
+        opts.account_id
+        |> transactions_stream(from_date, opts.base_url)
+        |> drop_until_id(opts[:from_id])
+        |> take(opts[:transactions_count])
+
+      {:ok, transactions}
     else
-      []
+      {:error, :not_found}
     end
   end
 
   def get_transaction(opts) do
-    if AccountBuilder.get_account(opts.token, opts.account_id, opts.base_url) do
-      opts.account_id
-      |> transactions_stream(opts[:from_date], opts.base_url)
-      |> Stream.filter(&(&1.id == opts.id))
-      |> Enum.take(1)
-      |> List.first()
+    if account_valid?(opts.token, opts.account_id, opts.base_url) do
+      transaction =
+        opts.account_id
+        |> transactions_stream(opts[:from_date], opts.base_url)
+        |> Stream.filter(&(&1.id == opts.id))
+        |> Enum.take(1)
+        |> List.first()
+
+      case transaction do
+        nil -> {:error, :not_found}
+        transaction -> {:ok, transaction}
+      end
     else
-      nil
+      {:error, :not_found}
+    end
+  end
+
+  defp account_valid?(token, account_id, base_url) do
+    case AccountBuilder.get_account(token, account_id, base_url) do
+      {:error, _} -> false
+      _ -> true
     end
   end
 

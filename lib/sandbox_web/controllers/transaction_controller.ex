@@ -8,9 +8,10 @@ defmodule SandboxWeb.TransactionController do
   def index(conn, params) do
     with {:ok, parsed_params} <- parse_index_params(params),
          parsed_params <- add_additional_data(parsed_params, conn),
-         transactions <- LedgerBehaviour.impl().list_transactions(parsed_params) do
+         {:ok, transactions} <- LedgerBehaviour.impl().list_transactions(parsed_params) do
       render(conn, "index.json", transactions: transactions)
     else
+      {:error, :not_found} -> {:error, :not_found}
       {:error, _} -> {:error, :bad_request}
     end
   end
@@ -18,9 +19,10 @@ defmodule SandboxWeb.TransactionController do
   def show(conn, params) do
     with {:ok, parsed_params} <- parse_show_params(params),
          parsed_params <- add_additional_data(parsed_params, conn),
-         transaction <- LedgerBehaviour.impl().get_transaction(parsed_params) do
+         {:ok, transaction} <- LedgerBehaviour.impl().get_transaction(parsed_params) do
       render(conn, "show.json", transaction: transaction)
     else
+      {:error, :not_found} -> {:error, :not_found}
       {:error, _} -> {:error, :bad_request}
     end
   end

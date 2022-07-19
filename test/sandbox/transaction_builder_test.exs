@@ -12,22 +12,21 @@ defmodule Sandbox.TransactionBuilderTest do
 
   describe "list_transactions/2" do
     test "returns all transactions for given account" do
-      transactions1 =
+      {:ok, transactions1} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
           base_url: @base_url
         })
 
-      transactions2 =
-        TransactionBuilder.list_transactions(%{
-          token: @token2,
-          account_id: @account_id1,
-          base_url: @base_url
-        })
+      assert {:error, :not_found} ==
+               TransactionBuilder.list_transactions(%{
+                 token: @token2,
+                 account_id: @account_id1,
+                 base_url: @base_url
+               })
 
       assert Enum.any?(transactions1)
-      assert Enum.empty?(transactions2)
 
       Enum.each(transactions1, fn txn ->
         assert %{
@@ -53,7 +52,7 @@ defmodule Sandbox.TransactionBuilderTest do
     end
 
     test "returns transactions for last 90 days" do
-      transactions =
+      {:ok, transactions} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
@@ -78,7 +77,7 @@ defmodule Sandbox.TransactionBuilderTest do
       from_date1 = ~D[2022-04-26]
       from_date2 = ~D[2022-07-14]
 
-      transactions1 =
+      {:ok, transactions1} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
@@ -86,7 +85,7 @@ defmodule Sandbox.TransactionBuilderTest do
           from_date: from_date1
         })
 
-      transactions2 =
+      {:ok, transactions2} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
@@ -104,28 +103,28 @@ defmodule Sandbox.TransactionBuilderTest do
     end
 
     test "returns constant transactions and different for two accounts" do
-      transactions1a =
+      {:ok, transactions1a} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
           base_url: @base_url
         })
 
-      transactions1b =
+      {:ok, transactions1b} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
           base_url: @base_url
         })
 
-      transactions2a =
+      {:ok, transactions2a} =
         TransactionBuilder.list_transactions(%{
           token: @token2,
           account_id: @account_id2,
           base_url: @base_url
         })
 
-      transactions2b =
+      {:ok, transactions2b} =
         TransactionBuilder.list_transactions(%{
           token: @token2,
           account_id: @account_id2,
@@ -144,7 +143,7 @@ defmodule Sandbox.TransactionBuilderTest do
     test "limiting transactions with count param" do
       count = 4
 
-      txn_all =
+      {:ok, txn_all} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
@@ -152,7 +151,7 @@ defmodule Sandbox.TransactionBuilderTest do
           from_date: @from_date
         })
 
-      txn_with_count =
+      {:ok, txn_with_count} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
@@ -168,7 +167,7 @@ defmodule Sandbox.TransactionBuilderTest do
     test "paginating transactions with id and count" do
       count = 2
 
-      txn_all =
+      {:ok, txn_all} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
@@ -178,7 +177,7 @@ defmodule Sandbox.TransactionBuilderTest do
 
       [_, %{id: from_id}, txn_1, txn_2 | _tail] = txn_all
 
-      txn_with_count_from_id =
+      {:ok, txn_with_count_from_id} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
@@ -193,7 +192,7 @@ defmodule Sandbox.TransactionBuilderTest do
     end
 
     test "transactions have a running balance" do
-      txn =
+      {:ok, transactions} =
         TransactionBuilder.list_transactions(%{
           token: @token2,
           account_id: @account_id2,
@@ -206,7 +205,7 @@ defmodule Sandbox.TransactionBuilderTest do
         %{amount: amount_string3, running_balance: running_balance_string3},
         %{amount: amount_string2, running_balance: running_balance_string2},
         %{amount: amount_string1, running_balance: running_balance_string1}
-      ] = txn
+      ] = transactions
 
       {amount1, ""} = Float.parse(amount_string1)
       {amount2, ""} = Float.parse(amount_string2)
@@ -227,49 +226,55 @@ defmodule Sandbox.TransactionBuilderTest do
     test "returns transaction only for correct token and ids" do
       txn_id = "txn_1331cd70a7120add9637d"
 
-      assert TransactionBuilder.get_transaction(%{
-               token: @token1,
-               account_id: @account_id1,
-               base_url: @base_url,
-               id: txn_id,
-               from_date: @from_date
-             }) ==
-               build_transaction(%{
+      expected_transaction =
+        build_transaction(%{
+          id: txn_id,
+          date: "2022-06-30",
+          amount: "-29.99",
+          running_balance: "91040.97",
+          description: "Jack In The Box",
+          account_id: @account_id1
+        })
+
+      assert assert {:ok, expected_transaction} ==
+                      TransactionBuilder.get_transaction(%{
+                        token: @token1,
+                        account_id: @account_id1,
+                        base_url: @base_url,
+                        id: txn_id,
+                        from_date: @from_date
+                      })
+
+      assert {:error, :not_found} ==
+               TransactionBuilder.get_transaction(%{
+                 token: "other_token",
+                 account_id: @account_id1,
+                 base_url: @base_url,
                  id: txn_id,
-                 date: "2022-06-30",
-                 amount: "-29.99",
-                 running_balance: "91040.97",
-                 description: "Jack In The Box",
-                 account_id: @account_id1
+                 from_date: @from_date
                })
 
-      refute TransactionBuilder.get_transaction(%{
-               token: "other_token",
-               account_id: @account_id1,
-               base_url: @base_url,
-               id: txn_id,
-               from_date: @from_date
-             })
+      assert {:error, :not_found} ==
+               TransactionBuilder.get_transaction(%{
+                 token: @token1,
+                 account_id: "other_account",
+                 base_url: @base_url,
+                 id: txn_id,
+                 from_date: @from_date
+               })
 
-      refute TransactionBuilder.get_transaction(%{
-               token: @token1,
-               account_id: "other_account",
-               base_url: @base_url,
-               id: txn_id,
-               from_date: @from_date
-             })
-
-      refute TransactionBuilder.get_transaction(%{
-               token: @token1,
-               account_id: @account_id1,
-               base_url: @base_url,
-               id: "other_txn",
-               from_date: @from_date
-             })
+      assert {:error, :not_found} ==
+               TransactionBuilder.get_transaction(%{
+                 token: @token1,
+                 account_id: @account_id1,
+                 base_url: @base_url,
+                 id: "other_txn",
+                 from_date: @from_date
+               })
     end
 
     test "listed transaction accessible via get_transaction/3" do
-      transactions1 =
+      {:ok, transactions1} =
         TransactionBuilder.list_transactions(%{
           token: @token1,
           account_id: @account_id1,
@@ -277,7 +282,7 @@ defmodule Sandbox.TransactionBuilderTest do
           from_date: @from_date
         })
 
-      transactions2 =
+      {:ok, transactions2} =
         TransactionBuilder.list_transactions(%{
           token: @token2,
           account_id: @account_id2,
@@ -289,39 +294,43 @@ defmodule Sandbox.TransactionBuilderTest do
       assert Enum.any?(transactions2)
 
       Enum.each(transactions1, fn transaction ->
-        assert TransactionBuilder.get_transaction(%{
-                 token: @token1,
-                 account_id: @account_id1,
-                 base_url: @base_url,
-                 id: transaction.id,
-                 from_date: @from_date
-               })
+        assert {:ok, %{}} =
+                 TransactionBuilder.get_transaction(%{
+                   token: @token1,
+                   account_id: @account_id1,
+                   base_url: @base_url,
+                   id: transaction.id,
+                   from_date: @from_date
+                 })
 
-        refute TransactionBuilder.get_transaction(%{
-                 token: @token2,
-                 account_id: @account_id2,
-                 base_url: @base_url,
-                 id: transaction.id,
-                 from_date: @from_date
-               })
+        assert {:error, :not_found} ==
+                 TransactionBuilder.get_transaction(%{
+                   token: @token2,
+                   account_id: @account_id2,
+                   base_url: @base_url,
+                   id: transaction.id,
+                   from_date: @from_date
+                 })
       end)
 
       Enum.each(transactions2, fn transaction ->
-        refute TransactionBuilder.get_transaction(%{
-                 token: @token1,
-                 account_id: @account_id1,
-                 base_url: @base_url,
-                 id: transaction.id,
-                 from_date: @from_date
-               })
+        assert {:error, :not_found} ==
+                 TransactionBuilder.get_transaction(%{
+                   token: @token1,
+                   account_id: @account_id1,
+                   base_url: @base_url,
+                   id: transaction.id,
+                   from_date: @from_date
+                 })
 
-        assert TransactionBuilder.get_transaction(%{
-                 token: @token2,
-                 account_id: @account_id2,
-                 base_url: @base_url,
-                 id: transaction.id,
-                 from_date: @from_date
-               })
+        assert {:ok, %{}} =
+                 TransactionBuilder.get_transaction(%{
+                   token: @token2,
+                   account_id: @account_id2,
+                   base_url: @base_url,
+                   id: transaction.id,
+                   from_date: @from_date
+                 })
       end)
     end
 

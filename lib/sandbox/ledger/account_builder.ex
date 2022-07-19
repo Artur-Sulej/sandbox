@@ -5,17 +5,28 @@ defmodule Sandbox.Ledger.AccountBuilder do
   @max_count 4
 
   def list_accounts(token, base_url) do
+    accounts = generate_accounts(token, base_url)
+    {:ok, accounts}
+  end
+
+  def get_account(token, account_id, base_url) do
+    account =
+      token
+      |> generate_accounts(base_url)
+      |> Enum.find(fn %{id: id} -> id == account_id end)
+
+    case account do
+      nil -> {:error, :not_found}
+      account -> {:ok, account}
+    end
+  end
+
+  defp generate_accounts(token, base_url) do
     token
     |> get_accounts_count()
     |> (&(1..&1)).()
     |> Enum.map(&Generator.generate_id("acc_#{token}_#{&1}", "acc"))
     |> Enum.map(&build_account(&1, base_url))
-  end
-
-  def get_account(token, account_id, base_url) do
-    token
-    |> list_accounts(base_url)
-    |> Enum.find(fn %{id: id} -> id == account_id end)
   end
 
   defp build_account(id, base_url) do

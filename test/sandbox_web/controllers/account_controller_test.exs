@@ -19,7 +19,7 @@ defmodule SandboxWeb.AccountControllerTest do
           assert token == "test_wazzup"
           assert base_url =~ "http"
 
-          [build_account()]
+          {:ok, [build_account()]}
         end
       )
 
@@ -41,7 +41,7 @@ defmodule SandboxWeb.AccountControllerTest do
           assert base_url =~ "http"
           assert id == @account_id
 
-          build_account()
+          {:ok, build_account()}
         end
       )
 
